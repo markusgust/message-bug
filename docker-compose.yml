@@ -1,0 +1,39 @@
+
+services:
+  rabbitmq-perf-publisher:
+    image: pivotalrabbitmq/perf-test:latest
+    #  container_name: rabbitmq-perf-publisher
+    environment:
+      - BROKER_URL=${BROKER_URL}
+    command: >
+      --uri "${BROKER_URL}"
+      --producers 100
+      --consumers 0
+      --rate 1.5 
+      --size 2048
+      --queue-pattern 'perf-test-%d'
+      --queue-pattern-from 1
+      --queue-pattern-to 1
+      --auto-delete false
+      --flag persistent
+    restart: unless-stopped
+
+  rabbitmq-perf-consumer:
+    image: pivotalrabbitmq/perf-test:latest
+    # container_name: rabbitmq-perf-consumer
+    environment:
+      - BROKER_URL=${BROKER_URL}
+    command: >
+      --uri "${BROKER_URL}"
+      --producers 0
+      --consumers 20000
+      --queue-pattern 'perf-test-%d'
+      --queue-pattern-from 1
+      --queue-pattern-to 1
+      --qos 1
+      --predeclared
+      --consumer-rate 0.01
+      --autoack false
+    restart: unless-stopped
+    depends_on:
+      - rabbitmq-perf-publisher
